@@ -26,12 +26,13 @@ namespace Flexinets.Wandera.PasswordRefresher
             log4net.Config.XmlConfigurator.ConfigureAndWatch(LogManager.GetRepository(Assembly.GetEntryAssembly()), new FileInfo(Path.Combine(context.FunctionAppDirectory, "log4net.config")));
             try
             {
-                var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                var keyvault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                var keyvault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
 
                 var oldPassword = await keyvault.GetSecretAsync(_vaultUrl, _secretName);
-                var client = new RadarApiClient.RadarApiClient(_username, oldPassword.Value);
+
                 var newPassword = CryptoMethods.GetRandomPassword();
+
+                var client = new RadarApiClient(_username, oldPassword.Value);
                 var response = await client.UpdatePasswordAsync(newPassword);
                 if (response.Trim() != "")
                 {
